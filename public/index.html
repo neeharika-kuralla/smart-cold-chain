@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Cold Chain Monitoring</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #ffd6e7;
+        }
+
+        h1 {
+            margin-top: 30px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: rgb(152, 218, 243);
+            width: 200px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .normal {
+        background-color: #2ecc71;
+        color: white;
+    }
+
+    .abnormal {
+        background-color:#ff0800;
+        color: white;
+    }
+    
+    #alertMessage {
+    font-size: 14px;
+    font-weight: bold;
+    }
+
+    .warning {
+        background-color: #f39c12;
+    }
+    </style>
+</head>
+
+<body>
+
+    <h1>Smart Cold Chain Monitoring System</h1>
+
+    <div class="container">
+
+        <div class="card" >
+            <h3>Temperature</h3>
+            <p class="value">
+                <span id="temperature">--</span> °C
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>Humidity</h3>
+            <p class="value">
+                <span id="humidity">--</span> %
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>Latitude</h3>
+            <p class="value" id="latitude">--</p>
+        </div>
+
+        <div class="card">
+            <h3>Longitude</h3>
+            <p class="value" id="longitude">--</p>
+        </div>
+
+        <div class="card">
+            <h3>Door Status</h3>
+            <p class="value" id="door">--</p>
+        </div>
+
+        <div class="card" id="statusCard">
+            <h3>System Status</h3>
+            <p class="value" id="status">--</p>
+            <p id="alertMessage">--</p>
+        </div>
+
+    </div>
+
+    <script>
+
+        async function getSensorData() {
+
+            const response = await fetch("/api/sensor");
+
+            const data = await response.json();
+
+            document.getElementById("temperature").textContent =
+                data.temperature;
+
+            document.getElementById("humidity").textContent =
+                data.humidity;
+
+            document.getElementById("latitude").textContent =
+                data.latitude;
+
+            document.getElementById("longitude").textContent =
+                data.longitude;
+
+            document.getElementById("door").textContent =
+                data.doorStatus;
+
+            const status = document.getElementById("status");
+            const statusCard = document.getElementById("statusCard");
+            const alertMessage = document.getElementById("alertMessage");
+
+            const temperatureAbnormal =
+                data.temperature < 2 || data.temperature > 8;
+
+            const doorOpen =
+                data.doorStatus === "OPEN";
+
+            statusCard.classList.remove(
+                "normal",
+                "abnormal",
+                "warning"
+            );
+
+            if (temperatureAbnormal) {
+
+                status.textContent = "ABNORMAL";
+
+                if (doorOpen) {
+                    alertMessage.textContent =
+                        "Temperature abnormal + Door OPEN";
+                } else {
+                    alertMessage.textContent =
+                        "Temperature outside safe range";
+                }
+
+                statusCard.classList.add("abnormal");
+
+            }
+            else if (doorOpen) {
+
+                status.textContent = "WARNING";
+
+                alertMessage.textContent =
+                    "Door is OPEN";
+
+                statusCard.classList.add("warning");
+
+            }
+            else {
+
+                status.textContent = "NORMAL";
+
+                alertMessage.textContent =
+                    "All conditions are normal";
+
+                statusCard.classList.add("normal");
+            }
+                    }
+
+        // Get sensor data when page loads
+        getSensorData();
+
+        // Update every 5 seconds
+        setInterval(getSensorData, 5000);
+
+    </script>
+
+</body>
+</html>

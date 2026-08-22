@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coldchain-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: coldchain-app
+  template:
+    metadata:
+      labels:
+        app: coldchain-app
+    spec:
+      containers:
+        - name: coldchain-app
+          image: kneeharika27/smart-cold-chain:latest
+          ports:
+            - containerPort: 3000
